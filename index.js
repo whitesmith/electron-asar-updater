@@ -83,7 +83,8 @@
             }
 
             // Get the current version
-            var packageInfo = require(AppPath + '/package.json');
+            var packageInfo = require(AppPath + 'package.json');
+            this.log(packageInfo.version);
 
             // If the version property not specified
             if(!packageInfo.version){
