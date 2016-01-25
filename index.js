@@ -8,7 +8,6 @@
     const Application = require('app');
     const FileSystem = require('original-fs');
     const Utils = require('util');
-    const Zip = require('adm-zip');
     const HTTP = require('restler');
     const AppPath = Application.getAppPath() + '/';
 
