@@ -1,10 +1,4 @@
 
-    /**
-     * Hi there,
-     * Thanks for using this module, and good luck with your Electron app.
-     *
-     * ~ Zain
-     * */
     const Application = require('app');
     const FileSystem = require('original-fs');
     const Utils = require('util');

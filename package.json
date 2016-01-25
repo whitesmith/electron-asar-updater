@@ -1,7 +1,7 @@
 {
   "name": "electron-asar-updater",
-  "version": "1.1.0",
-  "description": "Handles Electron app.asar updates, IN THE MOST BASIC WAY.",
+  "version": "1.1.1",
+  "description": "Handles Electron app.asar updates.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
