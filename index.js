@@ -163,7 +163,7 @@
             }
 
             var url = this.update.source,
-                fileName = 'update.zip';
+                fileName = 'update.asar';
 
             this.log('Downloading ' + url);
 
@@ -204,18 +204,35 @@
         },
 
         /**
-         * Apply the update, it simply overwrites the current files!
+         * Apply the update, remove app.asar and rename update.zip to app.asar
          * */
         'apply': function(){
-            try{
-                this.log('Extracting the new update files.');
 
-                var zip = new Zip(this.update.file);
-                zip.extractAllTo(AppPath);
+            try{
+
+                FileSystem.unlink(AppPath.slice(0,-1), function(err) {
+                   if (err) {
+                       return console.error(err);
+                   }
+                   console.log("Asar deleted successfully.");
+                });
 
                 this.log('New update files were extracted.');
                 this.log('End of update.');
 
+                // Failure
+                this.end(6);
+            }
+
+            try{
+                FileSystem.rename(this.update.file,AppPath.slice(0,-1),function(err) {
+                   if (err) {
+                       return console.error(err);
+                   }
+                   console.log("Update applied.");
+                })
+
+                this.log('End of update.');
                 // Success
                 this.end();
 
