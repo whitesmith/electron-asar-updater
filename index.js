@@ -148,7 +148,7 @@
 
 
                     }catch(error){
-                        Updater.log('API response is not valid');
+                        Updater.log(result + 'API response is not valid');
                         Updater.end(3);
                     }
                 });
@@ -157,7 +157,11 @@
         /**
          * Download the update file
          * */
-        'download': function(){
+        'download': function(callback){
+            if(callback){
+                this.setup.callback = callback;
+            }
+
             var url = this.update.source,
                 fileName = 'update.zip';
 
