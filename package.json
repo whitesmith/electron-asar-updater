@@ -1,14 +1,14 @@
 {
-  "name": "electron-basic-updater",
+  "name": "electron-asar-updater",
   "version": "1.1.0",
-  "description": "Handles Electron application updates, IN THE MOST BASIC WAY.",
+  "description": "Handles Electron app.asar updates, IN THE MOST BASIC WAY.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/azain/electron-basic-updater"
+    "url": "https://github.com/whitesmith/electron-asar-updater"
   },
   "keywords": [
     "electron",
@@ -16,10 +16,9 @@
     "update",
     "updater"
   ],
-  "author": "Ahmed Zain <tamkeelms@gmail.com>",
+  "author": "Ahmed Zain <tamkeelms@gmail.com> & Whitesmith <services@whitesmith.co",
   "license": "MIT",
   "dependencies": {
-    "adm-zip": "^0.4.7",
     "restler": "^3.4.0"
   }
 }
