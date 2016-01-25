@@ -10,6 +10,7 @@
     const Utils = require('util');
     const HTTP = require('restler');
     const AppPath = Application.getAppPath() + '/';
+    const AppPathFolder = AppPath.slice(0,AppPath.indexOf("app.asar"));
 
     const errors = [
         'version_not_specified',
@@ -59,7 +60,7 @@
 
             // Put it into a file
             if(this.setup.logFile){
-                FileSystem.appendFileSync(AppPath + this.setup.logFile, line + "\n");
+                FileSystem.appendFileSync(AppPathFolder + this.setup.logFile, line + "\n");
             }
         },
 
@@ -175,7 +176,7 @@
                     }
 
                     // The file full path
-                    var updateFile = AppPath + fileName;
+                    var updateFile = AppPathFolder + fileName;
 
                     // Create the file
                     FileSystem.writeFile(updateFile, data, null, function(error){
