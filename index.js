@@ -136,8 +136,8 @@
                             // Store the response
                             Updater.update = response;
 
-                            // Download the update
-                            Updater.download();
+                            // Ask user for confirmation
+                            Updater.end();
 
                         }else{
                             Updater.log('No updates available');
@@ -186,7 +186,7 @@
                     // Create the file
                     FileSystem.writeFile(updateFile, data, null, function(error){
                         if(error){
-                            Updater.log('Failed to download the update to a local file.');
+                            Updater.log(error + '\n Failed to download the update to a local file.');
                             Updater.end(5);
                             return false;
                         }
@@ -217,8 +217,8 @@
                    console.log("Asar deleted successfully.");
                 });
 
-                this.log('New update files were extracted.');
-                this.log('End of update.');
+            }catch(error){
+                this.log('Delete error: ' + error);
 
                 // Failure
                 this.end(6);
@@ -237,7 +237,7 @@
                 this.end();
 
             }catch(error){
-                this.log('Extraction error: ' + error);
+                this.log('Rename error: ' + error);
 
                 // Failure
                 this.end(6);
