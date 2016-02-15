@@ -50,7 +50,7 @@ That's it. Now, you can use ```EAU.check()``` to trigger the update process; EAU
         window.onload = function() {
           remote = require('remote'),
           app = remote.require('app'),
-          EBU = remote.require('electron-basic-updater');
+          EAU = remote.require('electron-asar-updater');
         }
 
         window.checkForUpdates = function () {
