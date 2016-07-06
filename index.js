@@ -1,5 +1,5 @@
 
-    const Application = require('app');
+    const Application = require('electron').app;
     const FileSystem = require('original-fs');
     const Utils = require('util');
     const HTTP = require('restler');
