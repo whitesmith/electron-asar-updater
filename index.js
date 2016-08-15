@@ -4,8 +4,8 @@
     const Utils = require('util');
     const HTTP = require('restler');
     const AppPath = Application.getAppPath() + '/';
-    const AppPathFolder = AppPath.slice(0,AppPath.indexOf("app.asar"));
-
+    const AppPathFolder = AppPath.slice(0,AppPath.indexOf("app.asar")) + '/';
+    
     const errors = [
         'version_not_specified',
         'cannot_connect_to_api',
@@ -43,6 +43,10 @@
          * */
         'init': function(setup){
             this.setup = Utils._extend(this.setup, setup);
+            
+            this.log("AppPath: %s", AppPath);
+            this.log("AppPathFolder: %s", AppPathFolder);
+
         },
 
         /**
@@ -54,6 +58,7 @@
 
             // Put it into a file
             if(this.setup.logFile){
+              console.log("%s + %s + %s", AppPathFolder, this.setup.logFile, line);
                 FileSystem.appendFileSync(AppPathFolder + this.setup.logFile, line + "\n");
             }
         },
@@ -176,6 +181,7 @@
 
                     // The file full path
                     var updateFile = AppPathFolder + fileName;
+                    Updater.log("updateFile: %s", updateFile);
 
                     // Create the file
                     FileSystem.writeFile(updateFile, data, null, function(error){
@@ -187,6 +193,7 @@
 
                         // Store the update file path
                         Updater.update.file = updateFile;
+                        Updater.log("Updater.update.file = %s", updateFile);
 
                         // Success
                         Updater.log('Update downloaded: ' + updateFile);
@@ -204,11 +211,13 @@
 
             try{
 
+                this.log("Going to unlink: %s", AppPath.slice(0,-1));
+                
                 FileSystem.unlink(AppPath.slice(0,-1), function(err) {
                    if (err) {
                        return console.error(err);
                    }
-                   console.log("Asar deleted successfully.");
+                   this.log("Asar deleted successfully.");
                 });
 
             }catch(error){
@@ -219,11 +228,12 @@
             }
 
             try{
+                this.log("Going to rename %s to %s", this.update.file, AppPath.slice(0,-1));
                 FileSystem.rename(this.update.file,AppPath.slice(0,-1),function(err) {
                    if (err) {
                        return console.error(err);
                    }
-                   console.log("Update applied.");
+                   this.log("Update applied.");
                 })
 
                 this.log('End of update.');
