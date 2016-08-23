@@ -4,7 +4,7 @@
     const Utils = require('util');
     const HTTP = require('restler');
     const AppPath = Application.getAppPath() + '/';
-    const AppPathFolder = AppPath.slice(0,AppPath.indexOf("app.asar")) + '/';
+    const AppPathFolder = AppPath.slice(0,AppPath.indexOf("app.asar"));
     
     const errors = [
         'version_not_specified',
