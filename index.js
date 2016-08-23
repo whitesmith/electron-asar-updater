@@ -44,8 +44,8 @@
         'init': function(setup){
             this.setup = Utils._extend(this.setup, setup);
             
-            this.log("AppPath: %s", AppPath);
-            this.log("AppPathFolder: %s", AppPathFolder);
+            this.log("AppPath: " + AppPath);
+            this.log("AppPathFolder: " + AppPathFolder);
 
         },
 
@@ -181,7 +181,7 @@
 
                     // The file full path
                     var updateFile = AppPathFolder + fileName;
-                    Updater.log("updateFile: %s", updateFile);
+                    Updater.log("updateFile: " + updateFile);
 
                     // Create the file
                     FileSystem.writeFile(updateFile, data, null, function(error){
@@ -193,7 +193,7 @@
 
                         // Store the update file path
                         Updater.update.file = updateFile;
-                        Updater.log("Updater.update.file = %s", updateFile);
+                        Updater.log("Updater.update.file: " + updateFile);
 
                         // Success
                         Updater.log('Update downloaded: ' + updateFile);
@@ -211,10 +211,11 @@
 
             try{
 
-                this.log("Going to unlink: %s", AppPath.slice(0,-1));
+                this.log("Going to unlink: " + AppPath.slice(0,-1));
                 
                 FileSystem.unlink(AppPath.slice(0,-1), function(err) {
                    if (err) {
+                       Updater.log("Couldn't unlink: " + AppPath.slice(0,-1));
                        return console.error(err);
                    }
                    this.log("Asar deleted successfully.");
@@ -228,9 +229,10 @@
             }
 
             try{
-                this.log("Going to rename %s to %s", this.update.file, AppPath.slice(0,-1));
+                this.log("Going to rename: " + this.update.file + " to: " + AppPath.slice(0,-1));
                 FileSystem.rename(this.update.file,AppPath.slice(0,-1),function(err) {
                    if (err) {
+                       Updater.log("Couldn't rename: " + Updater.update.file + " to: " + AppPath.slice(0,-1));
                        return console.error(err);
                    }
                    this.log("Update applied.");
