@@ -248,6 +248,37 @@
                 // Failure
                 this.end(6);
             }
+        },
+        
+        // app.asar is always EBUSY on Windows, so we need to try another
+        // way of replacing it. This should get called after the main Electron
+        // process has quit. Win32 calls 'move' and other platforms call 'mv'
+        'mvOrMove': function(child) {
+          var updateAsar = AppPathFolder + 'update.asar';
+          var appAsar = AppPathFolder + 'app.asar';
+          var wat = AppPathFolder + 'wat.wtf';
+          var winArgs = "";
+          
+          Updater.log("Checking for " + updateAsar);
+          try {
+            Updater.log("Going to shell out to move: " + updateAsar + " to: " + AppAsar);
+
+            if (process.platform==='win32') {
+              // so ugly - this opens a dos window, which waits for 5 seconds (by which time the app.asar is not EBUSY)
+              // and then does the move - really needs to be invisible, but will do ATM
+              winArgs = `timeout /t 5 > nul && move /y ${JSON.stringify(updateAsar)} ${JSON.stringify(appAsar)}`
+              Updater.log(winArgs);
+              child.spawn('cmd', ['/s', '/c', '"' + winArgs + '"'], {detached: true, windowsVerbatimArguments: true, stdio: 'ignore'});
+            } else {
+              child.spawn('bash', ['-c', ['cd ' + JSON.stringify(AppPathFolder), 'mv -f update.asar app.asar'].join(' && ')], {detached: true});
+            }
+            child.unref; // let the child live on
+            
+            // child.exec(`${process.platform==='win32'?'move /y':'mv'} "${updateAsar}" "${AppAsar}"`)
+          } catch(error) {
+            Updater.log("shelling out to move failed: " + error);
+          }
+
         }
     };
 
