@@ -3,8 +3,14 @@
     const FileSystem = require('original-fs');
     const Utils = require('util');
     const HTTP = require('restler');
+    
+    // Yes, it's weird, but we need the trailing slash after the .asar
+    // so we can read paths "inside" it, e.g. the package.json, where we look
+    // for our current version
     const AppPath = Application.getAppPath() + '/';
     const AppPathFolder = AppPath.slice(0,AppPath.indexOf("app.asar"));
+    const AppAsar = AppPath.slice(0,-1);
+    const WindowsUpdater = AppPath.slice(0,AppPath.indexOf("resources")) + "updater.exe";
     
     const errors = [
         'version_not_specified',
@@ -256,29 +262,42 @@
         'mvOrMove': function(child) {
           var updateAsar = AppPathFolder + 'update.asar';
           var appAsar = AppPathFolder + 'app.asar';
-          var wat = AppPathFolder + 'wat.wtf';
           var winArgs = "";
           
           Updater.log("Checking for " + updateAsar);
+          
           try {
-            Updater.log("Going to shell out to move: " + updateAsar + " to: " + AppAsar);
-
-            if (process.platform==='win32') {
-              // so ugly - this opens a dos window, which waits for 5 seconds (by which time the app.asar is not EBUSY)
-              // and then does the move - really needs to be invisible, but will do ATM
-              winArgs = `timeout /t 5 > nul && move /y ${JSON.stringify(updateAsar)} ${JSON.stringify(appAsar)}`
-              Updater.log(winArgs);
-              child.spawn('cmd', ['/s', '/c', '"' + winArgs + '"'], {detached: true, windowsVerbatimArguments: true, stdio: 'ignore'});
-            } else {
-              child.spawn('bash', ['-c', ['cd ' + JSON.stringify(AppPathFolder), 'mv -f update.asar app.asar'].join(' && ')], {detached: true});
+            FileSystem.accessSync(updateAsar)
+            try {
+              Updater.log("Going to shell out to move: " + updateAsar + " to: " + AppAsar);
+              
+              if (process.platform==='win32') {
+                
+                Updater.log("Going to start the windows updater:" + WindowsUpdater + " " + updateAsar + " " + appAsar);
+                
+                // JSON.stringify() calls mean we're correctly quoting paths with spaces
+                winArgs = `${JSON.stringify(WindowsUpdater)} ${JSON.stringify(updateAsar)} ${JSON.stringify(appAsar)}`
+                Updater.log(winArgs);
+                // and the windowsVerbatimArguments options argument, in combination with the /s switch, stops windows stripping quotes from our commandline
+                
+                // This doesn't work:              
+                // child.spawn(`${JSON.stringify(WindowsUpdater)}`,[`${JSON.stringify(updateAsar)}`,`${JSON.stringify(appAsar)}`], {detached: true, windowsVerbatimArguments: true, stdio: 'ignore'});
+                // so we have to spawn a cmd shell, which then runs the updater, and leaves a visible window whilst running
+                child.spawn('cmd', ['/s', '/c', '"' + winArgs + '"'], {detached: true, windowsVerbatimArguments: true, stdio: 'ignore'});
+              } else {
+                // here's how we'd do this on Mac/Linux, but on Mac at least, the .asar isn't marked as busy, so the update process above
+                // is able to overwrite it.
+                // 
+                // child.spawn('bash', ['-c', ['cd ' + JSON.stringify(AppPathFolder), 'mv -f update.asar app.asar'].join(' && ')], {detached: true});
+              }
+              child.unref; // let the child live on
+              
+            } catch(error) {
+              Updater.log("Shelling out to move failed: " + error);
             }
-            child.unref; // let the child live on
-            
-            // child.exec(`${process.platform==='win32'?'move /y':'mv'} "${updateAsar}" "${AppAsar}"`)
           } catch(error) {
-            Updater.log("shelling out to move failed: " + error);
+            Updater.log("Couldn't see an " + updateAsar + " error was: " + error);
           }
-
         }
     };
 
