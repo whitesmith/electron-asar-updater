@@ -224,7 +224,7 @@
                        Updater.log("Couldn't unlink: " + AppPath.slice(0,-1));
                        return console.error(err);
                    }
-                   this.log("Asar deleted successfully.");
+                   Updater.log("Asar deleted successfully.");
                 });
 
             }catch(error){
@@ -241,7 +241,7 @@
                        Updater.log("Couldn't rename: " + Updater.update.file + " to: " + AppPath.slice(0,-1));
                        return console.error(err);
                    }
-                   this.log("Update applied.");
+                   Updater.log("Update applied.");
                 })
 
                 this.log('End of update.');
