@@ -1,11 +1,17 @@
 
-    const Application = require('app');
+    const Application = require('electron').app;
     const FileSystem = require('original-fs');
     const Utils = require('util');
     const HTTP = require('restler');
+    
+    // Yes, it's weird, but we need the trailing slash after the .asar
+    // so we can read paths "inside" it, e.g. the package.json, where we look
+    // for our current version
     const AppPath = Application.getAppPath() + '/';
     const AppPathFolder = AppPath.slice(0,AppPath.indexOf("app.asar"));
-
+    const AppAsar = AppPath.slice(0,-1);
+    const WindowsUpdater = AppPath.slice(0,AppPath.indexOf("resources")) + "updater.exe";
+    
     const errors = [
         'version_not_specified',
         'cannot_connect_to_api',
@@ -43,6 +49,10 @@
          * */
         'init': function(setup){
             this.setup = Utils._extend(this.setup, setup);
+            
+            this.log("AppPath: " + AppPath);
+            this.log("AppPathFolder: " + AppPathFolder);
+
         },
 
         /**
@@ -54,6 +64,7 @@
 
             // Put it into a file
             if(this.setup.logFile){
+              console.log("%s + %s + %s", AppPathFolder, this.setup.logFile, line);
                 FileSystem.appendFileSync(AppPathFolder + this.setup.logFile, line + "\n");
             }
         },
@@ -176,6 +187,7 @@
 
                     // The file full path
                     var updateFile = AppPathFolder + fileName;
+                    Updater.log("updateFile: " + updateFile);
 
                     // Create the file
                     FileSystem.writeFile(updateFile, data, null, function(error){
@@ -187,6 +199,7 @@
 
                         // Store the update file path
                         Updater.update.file = updateFile;
+                        Updater.log("Updater.update.file: " + updateFile);
 
                         // Success
                         Updater.log('Update downloaded: ' + updateFile);
@@ -204,11 +217,14 @@
 
             try{
 
+                this.log("Going to unlink: " + AppPath.slice(0,-1));
+                
                 FileSystem.unlink(AppPath.slice(0,-1), function(err) {
                    if (err) {
+                       Updater.log("Couldn't unlink: " + AppPath.slice(0,-1));
                        return console.error(err);
                    }
-                   console.log("Asar deleted successfully.");
+                   Updater.log("Asar deleted successfully.");
                 });
 
             }catch(error){
@@ -219,11 +235,13 @@
             }
 
             try{
+                this.log("Going to rename: " + this.update.file + " to: " + AppPath.slice(0,-1));
                 FileSystem.rename(this.update.file,AppPath.slice(0,-1),function(err) {
                    if (err) {
+                       Updater.log("Couldn't rename: " + Updater.update.file + " to: " + AppPath.slice(0,-1));
                        return console.error(err);
                    }
-                   console.log("Update applied.");
+                   Updater.log("Update applied.");
                 })
 
                 this.log('End of update.');
@@ -236,6 +254,50 @@
                 // Failure
                 this.end(6);
             }
+        },
+        
+        // app.asar is always EBUSY on Windows, so we need to try another
+        // way of replacing it. This should get called after the main Electron
+        // process has quit. Win32 calls 'move' and other platforms call 'mv'
+        'mvOrMove': function(child) {
+          var updateAsar = AppPathFolder + 'update.asar';
+          var appAsar = AppPathFolder + 'app.asar';
+          var winArgs = "";
+          
+          Updater.log("Checking for " + updateAsar);
+          
+          try {
+            FileSystem.accessSync(updateAsar)
+            try {
+              Updater.log("Going to shell out to move: " + updateAsar + " to: " + AppAsar);
+              
+              if (process.platform==='win32') {
+                
+                Updater.log("Going to start the windows updater:" + WindowsUpdater + " " + updateAsar + " " + appAsar);
+                
+                // JSON.stringify() calls mean we're correctly quoting paths with spaces
+                winArgs = `${JSON.stringify(WindowsUpdater)} ${JSON.stringify(updateAsar)} ${JSON.stringify(appAsar)}`
+                Updater.log(winArgs);
+                // and the windowsVerbatimArguments options argument, in combination with the /s switch, stops windows stripping quotes from our commandline
+                
+                // This doesn't work:              
+                // child.spawn(`${JSON.stringify(WindowsUpdater)}`,[`${JSON.stringify(updateAsar)}`,`${JSON.stringify(appAsar)}`], {detached: true, windowsVerbatimArguments: true, stdio: 'ignore'});
+                // so we have to spawn a cmd shell, which then runs the updater, and leaves a visible window whilst running
+                child.spawn('cmd', ['/s', '/c', '"' + winArgs + '"'], {detached: true, windowsVerbatimArguments: true, stdio: 'ignore'});
+              } else {
+                // here's how we'd do this on Mac/Linux, but on Mac at least, the .asar isn't marked as busy, so the update process above
+                // is able to overwrite it.
+                // 
+                // child.spawn('bash', ['-c', ['cd ' + JSON.stringify(AppPathFolder), 'mv -f update.asar app.asar'].join(' && ')], {detached: true});
+              }
+              child.unref; // let the child live on
+              
+            } catch(error) {
+              Updater.log("Shelling out to move failed: " + error);
+            }
+          } catch(error) {
+            Updater.log("Couldn't see an " + updateAsar + " error was: " + error);
+          }
         }
     };
 
